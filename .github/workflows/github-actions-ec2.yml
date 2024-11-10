@@ -37,4 +37,4 @@ jobs:
             cd home
             sudo mv * /var/www/html
             sudo rm -rf /var/www/html/index.html
-            sudo mv joelPortfolioHtml index 
+            sudo mv joelPortfolioHtml.html index
