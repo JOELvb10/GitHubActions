@@ -38,3 +38,4 @@ jobs:
             sudo mv * /var/www/html
             sudo rm -rf /var/www/html/index.html
             sudo mv /var/www/html/joelPortfolioHtml.html /var/www/html/index.html
+            sudo rm -rf /var/www/html/index
