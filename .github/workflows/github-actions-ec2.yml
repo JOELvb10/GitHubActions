@@ -12,10 +12,10 @@ jobs:
 
     steps:
       - name: Checkout the files
-        uses: actions/checkout@v3  # Updated to Node.js 16-compatible version
+        uses: actions/checkout@v3  # GitHub will automatically upgrade to Node.js 20 if needed
 
       - name: Deploy to Server 1
-        uses: easingthemes/ssh-deploy@v2  # Node.js 12 warning persists; no alternative yet
+        uses: easingthemes/ssh-deploy@v2  # This will be auto-upgraded to Node.js 20 by GitHub
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           REMOTE_HOST: ${{ secrets.HOST_DNS }}
