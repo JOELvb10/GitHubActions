@@ -1,4 +1,4 @@
-name: Push-to-EC2
+name: Deploy to EC2
 
 on:
   push:
@@ -7,32 +7,39 @@ on:
 
 jobs:
   deploy:
-    name: Deploy to EC2 on main branch push
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout the files
-        uses: actions/checkout@v3  # GitHub will automatically upgrade to Node.js 20 if needed
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      - name: Deploy to Server 1
-        uses: easingthemes/ssh-deploy@v2  # This will be auto-upgraded to Node.js 20 by GitHub
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'  # Use your Node.js version
+
+      - name: Install Dependencies
+        run: |
+          npm install
+          npm run build  # Build your application
+
+      - name: Deploy to EC2
         env:
           SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
           REMOTE_HOST: ${{ secrets.HOST_DNS }}
           REMOTE_USER: ${{ secrets.USERNAME }}
           TARGET: ${{ secrets.TARGET_DIR }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
 
-      - name: Executing remote ssh commands using ssh key
-        uses: appleboy/ssh-action@v0.1.10
-        with:
-          host: ${{ secrets.HOST_DNS }}
-          username: ${{ secrets.USERNAME }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            sudo apt-get -y update
-            sudo apt-get install -y apache2
-            sudo systemctl start apache2
-            sudo systemctl enable apache2
-            cd /home/ubuntu
-            sudo mv * /var/www/html
-            sudo systemctl restart apache2
+          # Sync build files to EC2 instance
+          rsync -avz -e "ssh -o StrictHostKeyChecking=no" ./build/ "$REMOTE_USER@$REMOTE_HOST:$TARGET"
+
+          # Restart the web server (assuming Node.js)
+          ssh -o StrictHostKeyChecking=no "$REMOTE_USER@$REMOTE_HOST" << 'EOF'
+            pm2 stop all || true   # Stops the server if running
+            pm2 start $TARGET/app.js  # Replace with your entry file if needed
+            pm2 save                 # Saves the process list for future reboots
+          EOF
