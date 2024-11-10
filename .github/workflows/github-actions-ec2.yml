@@ -36,4 +36,4 @@ jobs:
             sudo systemctl enable apache2
             cd home
             sudo mv * /var/www/html
-            sudo rm -rf index.html
+            sudo rm -rf /var/www/html/index.html
